@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{# Início das macros de formulário incorporadas de _forms.html #}
+{% macro render_field(field, label_text=None, helper_text=None, required=False, attrs={}) %}
+    <div class="form-group">
+        <label for="{{ field.id }}">
+            {{ label_text if label_text is not none else field.label.text }}
+            {% if required or (field.flags.required and not field.type == 'BooleanField') %}
+                <span class="required-indicator" aria-hidden="true">*</span>
+            {% endif %}
+        </label>
+
+        {# Prepara classes para o campo de entrada com base no estado de validação #}
+        {% set input_classes = ['form-control'] %}
+        {% if field.errors %}
+            {% set _ = input_classes.append('is-invalid') %}
+        {% endif %}
+
+        {# Constrói aria-describedby para texto de ajuda e erros #}
+        {% set describedby_ids = [] %}
+        {% if helper_text %}
+            {% set _ = describedby_ids.append(field.id + '-helper') %}
+        {% endif %}
+        {% if field.errors %}
+            {# Linka todos os erros à entrada usando um único ID #}
+            {% set _ = describedby_ids.append(field.id + '-error') %}
+        {% endif %}
+
+        {# Renderiza o campo em si com argumentos de palavra-chave adicionais #}
+        {{ field(class=input_classes | join(' '), aria_describedby=describedby_ids | join(' ') if describedby_ids else '', **attrs) }}
+
+        {# Exibe texto de ajuda #}
+        {% if helper_text %}
+            <small id="{{ field.id }}-helper" class="form-text">{{ helper_text }}</small>
+        {% endif %}
+
+        {# Exibe erros do campo #}
+        {% if field.errors %}
+            <small id="{{ field.id }}-error" class="form-text alert-error" role="alert">
+                {% for error in field.errors %}
+                    {{ error }}<br> {# Exibe todos os erros para o campo #}
+                {% endfor %}
+            </small>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro render_select_field(field, label_text=None, helper_text=None, required=False, placeholder_text=None, attrs={}) %}
+    <div class="form-group">
+        <label for="{{ field.id }}">
+            {{ label_text if label_text is not none else field.label.text }}
+            {% if required or (field.flags.required and not field.type == 'BooleanField') %}
+                <span class="required-indicator" aria-hidden="true">*</span>
+            {% endif %}
+        </label>
+
+        {% set input_classes = ['form-control'] %}
+        {% if field.errors %}
+            {% set _ = input_classes.append('is-invalid') %}
+        {% endif %}
+
+        {% set describedby_ids = [] %}
+        {% if helper_text %}
+            {% set _ = describedby_ids.append(field.id + '-helper') %}
+        {% endif %}
+        {% if field.errors %}
+            {% set _ = describedby_ids.append(field.id + '-error') %}
+        {% endif %}
+
+        <select name="{{ field.name }}" id="{{ field.id }}" class="{{ input_classes | join(' ') }}"
+                {% if describedby_ids %}aria-describedby="{{ describedby_ids | join(' ') }}"{% endif %}
+                {% if required or field.flags.required %}required aria-required="true"{% endif %}
+                {% for key, value in attrs.items() %}{{ key }}="{{ value }}" {% endfor %}>
+            {% if placeholder_text %}
+                <option value="">{{ placeholder_text }}</option>
+            {% endif %}
+            {% for value, text in field.choices %}
+                <option value="{{ value }}"{% if value == field.data %} selected{% endif %}>{{ text }}</option>
+            {% endfor %}
+        </select>
+
+        {% if helper_text %}
+            <small id="{{ field.id }}-helper" class="form-text">{{ helper_text }}</small>
+        {% endif %}
+
+        {% if field.errors %}
+            <small id="{{ field.id }}-error" class="form-text alert-error" role="alert">
+                {% for error in field.errors %}
+                    {{ error }}<br>
+                {% endfor %}
+            </small>
+        {% endif %}
+    </div>
+{% endmacro %}
+{# Fim das macros de formulário incorporadas #}
+
+
+{% block title %}Adicionar Financeira - FinanciaAI{% endblock %}
+
+{% block head_extra %}
+    <meta name="description" content="Adicione uma nova instituição financeira ao FinanciaAI. Insira informações da empresa, contato e endereço para expandir as opções de simulação de empréstimos.">
+    <meta name="keywords" content="adicionar financeira, nova instituição, cadastro de empresas, FinanciaAI, finanças, empréstimos, simulador">
+{% endblock %}
+
+{% block main_content %}
+<section class="add-company-section" aria-labelledby="main-add-company-title">
+    <div class="container">
+        <h1 id="main-add-company-title" class="page-title">
+            <svg class="icon-bank icon" viewBox="0 0 24 24" fill="none" role="img" aria-label="Ícone de banco, representando adicionar financeira">
+                <path d="M3 21h18M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 21V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13"/>
+            </svg>
+            Adicionar Nova Financeira
+        </h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <section class="flash-messages" role="alert" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="alert-message alert-{{ 'success' if category == 'success' else 'error' }}" role="alert">
+                            {{ message }}
+                            <button class="dismiss" aria-label="Fechar notificação">×</button>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+
+        <form method="post" class="add-company-form card" id="add-company-form">
+            {{ form.hidden_tag() }}
+
+            <fieldset class="form-section">
+                <legend>
+                    <svg class="icon-info icon" viewBox="0 0 24 24" fill="none" role="img" aria-label="Ícone de informações essenciais">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 16v.01M12 8v4"/>
+                    </svg>
+                    Dados Essenciais
+                </legend>
+                <p class="form-text-intro">Preencha as informações básicas da financeira (obrigatórias).</p>
+
+                {{ render_field(form.name,
+                                     label_text="Nome da empresa",
+                                     helper_text="Nome completo e oficial da instituição financeira.",
+                                     required=True,
+                                     attrs={
+                                         "placeholder": "Ex: Banco Exemplo S.A.",
+                                         "data-tooltip": "Nome completo e oficial da instituição financeira."
+                                     }) }}
+
+                {{ render_field(form.cnpj,
+                                     label_text="CNPJ",
+                                     helper_text="CNPJ no formato XX.XXX.XXX/XXXX-XX.",
+                                     required=True,
+                                     attrs={
+                                         "placeholder": "Ex: 12.345.678/9012-34",
+                                         "data-tooltip": "CNPJ no formato XX.XXX.XXX/XXXX-XX."
+                                     }) }}
+
+                {{ render_field(form.code,
+                                     label_text="Código da empresa",
+                                     helper_text="Código único com 3 a 10 caracteres alfanuméricos maiúsculos.",
+                                     required=True,
+                                     attrs={
+                                         "placeholder": "Ex: BX001",
+                                         "pattern": "[A-Z0-9]{3,10}",
+                                         "data-tooltip": "Código único com 3 a 10 caracteres alfanuméricos maiúsculos."
+                                     }) }}
+
+                {{ render_field(form.basic_interest_rate,
+                                     label_text="Taxa de juros base anual (%)",
+                                     helper_text="Digite a taxa em porcentagem (ex.: 18.5 para 18.5% ao ano).",
+                                     required=True,
+                                     attrs={
+                                         "type": "number",
+                                         "step": "0.01",
+                                         "min": "0",
+                                         "placeholder": "Ex: 18.50",
+                                         "data-tooltip": "Taxa de juros padrão anual da empresa (em porcentagem)."
+                                     }) }}
+            </fieldset>
+
+            <fieldset class="form-section">
+                <legend>
+                    <svg class="icon-location icon" viewBox="0 0 24 24" fill="none" role="img" aria-label="Ícone de localização e contato">
+                        <path d="M12 22s-8-4-8-10 8-10 8 0 8-4 8 10z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Localização e Contato
+                </legend>
+                <p class="form-text">Forneça as informações de endereço e contato da empresa.</p>
+
+                {{ render_select_field(form.country,
+                                             label_text="País de origem",
+                                             helper_text="País onde está localizada a sede principal da empresa.",
+                                             required=True,
+                                             placeholder_text="-- Selecione um país --",
+                                             attrs={
+                                                 "data-tooltip": "País onde está localizada a sede principal da empresa."
+                                             }) }}
+
+                {{ render_field(form.address_street,
+                                     label_text="Rua/Avenida",
+                                     helper_text="Nome da rua ou avenida da empresa.",
+                                     attrs={
+                                         "placeholder": "Ex: Av. Paulista",
+                                         "data-tooltip": "Nome da rua ou avenida da empresa."
+                                     }) }}
+
+                <div class="form-row">
+                    <div class="form-group-col">
+                        {{ render_field(form.address_number,
+                                             label_text="Número",
+                                             helper_text="Número do edifício.",
+                                             attrs={
+                                                 "placeholder": "Ex: 1000",
+                                                 "data-tooltip": "Número do edifício."
+                                             }) }}
+                    </div>
+                    <div class="form-group-col">
+                        {{ render_field(form.address_complement,
+                                             label_text="Complemento (opcional)",
+                                             helper_text="Informações adicionais como andar, sala ou bloco.",
+                                             attrs={
+                                                 "placeholder": "Ex: Andar 10, Sala 205",
+                                                 "data-tooltip": "Informações adicionais como andar, sala ou bloco."
+                                             }) }}
+                    </div>
+                </div>
+
+                {{ render_field(form.address_neighborhood,
+                                     label_text="Bairro",
+                                     helper_text="Bairro ou distrito da localização da empresa.",
+                                     attrs={
+                                         "placeholder": "Ex: Bela Vista",
+                                         "data-tooltip": "Bairro ou distrito da localização da empresa."
+                                     }) }}
+
+                <div class="form-row">
+                    <div class="form-group-col">
+                        {{ render_field(form.address_city,
+                                             label_text="Cidade",
+                                             helper_text="Cidade da localização da empresa.",
+                                             attrs={
+                                                 "placeholder": "Ex: São Paulo",
+                                                 "data-tooltip": "Cidade da localização da empresa."
+                                             }) }}
+                    </div>
+                    <div class="form-group-col">
+                        {{ render_field(form.address_state,
+                                             label_text="Estado/Província",
+                                             helper_text="Estado ou província da localização (ex.: SP, RJ).",
+                                             attrs={
+                                                 "placeholder": "Ex: SP",
+                                                 "data-tooltip": "Estado ou província da localização (ex.: SP, RJ)."
+                                             }) }}
+                    </div>
+                </div>
+
+                {{ render_field(form.address_zipcode,
+                                     label_text="CEP / Código Postal",
+                                     helper_text="Código postal (ex.: XXXXX-XXX ou XXXXX).",
+                                     attrs={
+                                         "placeholder": "Ex: 01311-100",
+                                         "data-tooltip": "Código postal (ex.: XXXXX-XXX ou XXXXX)."
+                                     }) }}
+            </fieldset>
+
+            <fieldset class="form-section">
+                <legend>
+                    <svg class="icon-contact icon" viewBox="0 0 24 24" fill="none" role="img" aria-label="Ícone de contatos online">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.8 19.8 0 0 1 4 12c0-5 10 0 10-5z"/><path d="M4.27 3.27L21 12l-4 9.73"/>
+                    </svg>
+                    Contatos Online
+                </legend>
+                <p class="form-text">Forneça os meios de contato digital da empresa.</p>
+
+                {{ render_field(form.contact_phone,
+                                     label_text="Telefone",
+                                     helper_text="Telefone principal com código do país e DDD.",
+                                     attrs={
+                                         "type": "tel",
+                                         "placeholder": "Ex: +55 (11) 98765-4321",
+                                         "data-tooltip": "Telefone principal com código do país e DDD."
+                                     }) }}
+
+                {{ render_field(form.contact_email,
+                                     label_text="E-mail de contato",
+                                     helper_text="E-mail principal para suporte.",
+                                     attrs={
+                                         "type": "email",
+                                         "placeholder": "Ex: contato@example.com",
+                                         "data-tooltip": "E-mail principal para contato."
+                                     }) }}
+
+                {{ render_field(form.website_url,
+                                     label_text="Website",
+                                     helper_text="URL completa do site oficial.",
+                                     attrs={
+                                         "type": "url",
+                                         "placeholder": "Ex: https://www.example.com",
+                                         "data-tooltip": "URL completa do site oficial da empresa."
+                                     }) }}
+            </fieldset>
+
+            <div class="form-submit-area">
+                <button type="submit" class="btn btn-primary btn-xl">
+                    <svg class="icon-add icon" viewBox="0 0 24 24" fill="none" role="img" aria-label="Ícone de adicionar empresa">
+                        <path d="M12 5v14m7-7h-14"/>
+                    </svg>
+                    Adicionar Empresa
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block body_extra %}
+<script src="{{ url_for('static', filename='add_company.js') }}"></script>
+{% endblock %}

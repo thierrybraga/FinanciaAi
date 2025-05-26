@@ -1,0 +1,965 @@
+{% extends 'base.html' %}
+
+{% block title %}Simulação de Empréstimo Detalhada - FinanciaAI{% endblock %}
+
+{% block head_extra %}
+    <style>
+        /* Variáveis CSS para consistência de estilo */
+        :root {
+            --color-primary: #007bff;
+            --color-primary-dark: #0056b3;
+            --color-secondary: #6c757d;
+            --color-success: #28a745;
+            --color-danger: #dc3545;
+            --color-warning: #ffc107;
+            --color-info: #17a2b8;
+            --color-background: #f8f9fa;
+            --color-background-light: #e9ecef;
+            --color-card-background: #ffffff;
+            --color-text: #343a40;
+            --color-text-on-primary: #ffffff;
+            --border-radius-sm: 0.25rem;
+            --border-radius-md: 0.5rem;
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-xxl: 3rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--color-text);
+            background-color: var(--color-background);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: var(--spacing-xl) auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Estilos gerais para cards */
+        .card {
+            background-color: var(--color-card-background);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* Estilos para formulários */
+        .loan-form .form-title {
+            text-align: center;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-xl);
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            font-weight: bold;
+            color: var(--color-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid #ced4da;
+            border-radius: var(--border-radius-sm);
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        .form-text {
+            font-size: 0.85em;
+            color: var(--color-secondary);
+            margin-top: var(--spacing-xs);
+            display: block;
+        }
+
+        /* Estilos para botões */
+        .btn {
+            display: inline-block;
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-size: 1em;
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            border-radius: var(--border-radius-sm);
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+                        border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            color: var(--color-text-on-primary);
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-dark);
+            border-color: var(--color-primary-dark);
+        }
+
+        .btn-secondary {
+            color: var(--color-text);
+            background-color: var(--color-background-light);
+            border-color: var(--color-secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #dae0e5;
+            border-color: #545b62;
+        }
+
+        .btn-lg {
+            padding: var(--spacing-lg) var(--spacing-xl);
+            font-size: 1.1em;
+            border-radius: var(--border-radius-md);
+        }
+
+        /* Mensagens Flash */
+        .flash-messages {
+            margin-bottom: var(--spacing-xl);
+            text-align: center;
+        }
+
+        .alert-message {
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid transparent;
+            border-radius: var(--border-radius-sm);
+            font-weight: bold;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error { /* Usado para 'error' e 'danger' */
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        /* Seções de Resultados */
+        .results-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .section-title {
+            text-align: center;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-xl);
+            font-size: 1.6em;
+        }
+
+        .summary-box {
+            text-align: center;
+            padding: var(--spacing-lg);
+            border: 1px solid #e0e0e0;
+            background-color: var(--color-card-background);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .summary-box p {
+            margin-bottom: var(--spacing-sm);
+            font-size: 1.1em;
+        }
+
+        .summary-box p strong {
+            color: var(--color-primary-dark);
+        }
+
+        /* Estilos para os botões de navegação dos gráficos */
+        .chart-nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .chart-nav-buttons .btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: 0.9em;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .chart-nav-buttons .btn.active {
+            background-color: var(--color-primary);
+            color: var(--color-text-on-primary);
+            border-color: var(--color-primary-dark);
+        }
+
+        .chart-nav-buttons .btn:not(.active):hover {
+            background-color: var(--color-background-light);
+            color: var(--color-primary);
+        }
+
+        /* Estilos para os contêineres dos gráficos */
+        .chart-container {
+            position: relative;
+            height: 400px; /* Altura fixa para os gráficos */
+            width: 100%;
+            margin-bottom: var(--spacing-xl);
+            background-color: var(--color-card-background);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Esconder gráficos por padrão, serão mostrados via JS */
+        .chart-container.hidden {
+            display: none;
+        }
+
+        /* Estilo para o botão de recalcular */
+        .recalculate-button-container {
+            text-align: center;
+            margin-top: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* Tabela de Amortização */
+        .table-scroll {
+            overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
+            margin-bottom: var(--spacing-xl);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .amortization-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--color-card-background);
+            min-width: 600px; /* Garante que a tabela não fique muito estreita */
+        }
+
+        .amortization-table th,
+        .amortization-table td {
+            padding: var(--spacing-md);
+            border: 1px solid #dee2e6;
+            text-align: right;
+        }
+
+        .amortization-table th {
+            background-color: var(--color-primary);
+            color: var(--color-text-on-primary);
+            font-weight: bold;
+            text-align: center;
+            position: sticky;
+            top: 0; /* Fixa o cabeçalho ao rolar */
+            z-index: 1;
+        }
+
+        .amortization-table tbody tr:nth-child(even) {
+            background-color: var(--color-background-light);
+        }
+
+        .amortization-table tbody tr:hover {
+            background-color: #e2f0ff;
+        }
+
+        /* Responsividade da Tabela para telas pequenas */
+        @media (max-width: 768px) {
+            .amortization-table, .amortization-table tbody, .amortization-table tr, .amortization-table td {
+                display: block;
+            }
+
+            .amortization-table thead {
+                display: none;
+            }
+
+            .amortization-table tr {
+                margin-bottom: var(--spacing-md);
+                border: 1px solid #dee2e6;
+                border-radius: var(--border-radius-md);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .amortization-table td {
+                text-align: left;
+                position: relative;
+                padding-left: 50%;
+            }
+
+            .amortization-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                width: 45%;
+                padding-left: var(--spacing-md);
+                font-weight: bold;
+                text-align: right;
+                white-space: nowrap;
+            }
+        }
+
+        /* Estilos para a paginação da tabela */
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .pagination-controls button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--color-secondary);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--color-card-background);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .pagination-controls button:hover:not(:disabled) {
+            background-color: var(--color-background-light);
+        }
+
+        .pagination-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-controls span {
+            font-weight: bold;
+            color: var(--color-primary-dark);
+        }
+
+        /* Estilos para a seção de perfil de renda */
+        .income-profile-section {
+            margin-top: var(--spacing-xxl);
+        }
+
+        .income-profile-section .form-group {
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Estilos para a lista de financeiras com mais chance */
+        .high-chance-companies {
+            margin-top: var(--spacing-xl);
+        }
+
+        .company-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .company-item {
+            background-color: var(--color-card-background);
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .company-item .icon {
+            font-size: 1.5em;
+            color: var(--color-warning); /* Cor para as estrelas */
+        }
+
+        .company-item .details {
+            flex-grow: 1;
+        }
+
+        .company-item .details strong {
+            display: block;
+            font-size: 1.1em;
+            color: var(--color-primary-dark);
+        }
+
+        .company-item .details span {
+            font-size: 0.9em;
+            color: var(--color-secondary);
+        }
+
+        /* Estilos para o botão de relatório PDF */
+        .pdf-report-button-container {
+            text-align: center;
+            margin-top: var(--spacing-xxl);
+            margin-bottom: var(--spacing-xxl);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" xintegrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuRlEzO+tcaEPQogQ0KaoIF2g/2g/L/Qz/g4b/B9b2f3A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+{% endblock %}
+
+{% block main_content %}
+    {# Mensagens Flash - Atualizadas para as novas classes CSS #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <section class="flash-messages" role="alert" aria-live="polite">
+                {% for category, message in messages %}
+                    <div class="alert-message alert-{{ category }}" role="alert">{{ message }}</div>
+                {% endfor %}
+            </section>
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" class="loan-form card">
+        {{ form.hidden_tag() }} {# Campo oculto para o token CSRF #}
+        <h1 class="form-title">Calculadora de Empréstimos</h1>
+
+        <div class="form-group">
+            <label for="company">Selecione a Financeira:</label>
+            <select name="company" id="company" class="form-control" required aria-required="true" aria-label="Selecione a financeira">
+                <option value="">-- Selecione uma Financeira --</option>
+                {% for company in companies %}
+                    <option value="{{ company.id }}" {% if selected_company_id is not none and selected_company_id|int == company.id %}selected{% endif %}>
+                        {{ company.name }} ({{ company.code }}) - Taxa: {{ "%.2f"|format(company.basic_interest_rate) }}% a.a.
+                    </option>
+                {% endfor %}
+            </select>
+            {% if form.company.errors %}
+                <small class="form-text alert-error">{{ form.company.errors[0] }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="principal">Valor do Empréstimo (R$):</label>
+            <input type="number" name="principal" id="principal" class="form-control" step="0.01" min="0.01" required aria-required="true"
+                   value="{{ principal_value if principal_value is not none else '' }}"
+                   placeholder="Ex: 10000.00" aria-label="Valor do Empréstimo">
+            {% if form.principal.errors %}
+                <small class="form-text alert-error">{{ form.principal.errors[0] }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="years">Prazo (anos):</label>
+            <input type="number" name="years" id="years" class="form-control" min="1" required aria-required="true"
+                   value="{{ years_value if years_value is not none else '' }}"
+                   placeholder="Ex: 5" aria-label="Prazo em anos">
+            {% if form.years.errors %}
+                <small class="form-text alert-error">{{ form.years.errors[0] }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="extra_amortization">Amortização Extra (R$ - opcional):</label>
+            <input type="number" name="extra_amortization" id="extra_amortization" class="form-control" step="0.01" min="0"
+                   value="{{ extra_amortization_value if extra_amortization_value is not none else '0.00' }}"
+                   placeholder="Ex: 500.00" aria-label="Valor de amortização extra opcional">
+            <small class="form-text">Valor adicional que você deseja amortizar mensalmente (reduz o prazo ou o valor da parcela).</small>
+            {% if form.extra_amortization.errors %}
+                <small class="form-text alert-error">{{ form.extra_amortization.errors[0] }}</small>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg">Calcular Simulação</button>
+    </form>
+
+    {% if schedule %}
+        <section class="results-section">
+            <h2 class="section-title">Sumário do Empréstimo</h2>
+            <div class="summary-box card">
+                <p><strong>Valor Principal:</strong> R$ {{ summary.principal }}</p>
+                <p><strong>Total de Juros Pagos:</strong> R$ {{ summary.total_interest }}</p>
+                <p><strong>Total Amortizado (Principal):</strong> R$ {{ summary.total_principal }}</p>
+                <p><strong>Custo Total do Empréstimo:</strong> R$ {{ summary.total_paid }}</p>
+            </div>
+
+            <div class="chart-nav-buttons" role="tablist" aria-label="Navegação de Gráficos">
+                <button type="button" class="btn btn-secondary active" data-chart="debtChart" role="tab" aria-selected="true" aria-controls="debtChartContainer">Saldo Devedor</button>
+                <button type="button" class="btn btn-secondary" data-chart="interestChart" role="tab" aria-selected="false" aria-controls="interestChartContainer">Juros por Mês</button>
+                <button type="button" class="btn btn-secondary" data-chart="compositionChart" role="tab" aria-selected="false" aria-controls="compositionChartContainer">Composição Mensal</button>
+                <button type="button" class="btn btn-secondary" data-chart="totalProportionChart" role="tab" aria-selected="false" aria-controls="totalProportionChartContainer">Proporção Total</button>
+            </div>
+
+            <div id="debtChartContainer" class="chart-container" role="tabpanel" aria-labelledby="debtChart" tabindex="0">
+                <canvas id="debtChart"></canvas>
+            </div>
+
+            <div id="interestChartContainer" class="chart-container hidden" role="tabpanel" aria-labelledby="interestChart" tabindex="0">
+                <canvas id="interestChart"></canvas>
+            </div>
+
+            <div id="compositionChartContainer" class="chart-container hidden" role="tabpanel" aria-labelledby="compositionChart" tabindex="0">
+                <canvas id="compositionChart"></canvas>
+            </div>
+
+            <div id="totalProportionChartContainer" class="chart-container hidden" role="tabpanel" aria-labelledby="totalProportionChart" tabindex="0">
+                <canvas id="totalProportionChart"></canvas>
+            </div>
+
+            {# Nova seção: Perfil de Renda e Comprometimento #}
+            <section class="income-profile-section">
+                <h2 class="section-title">Perfil de Renda e Comprometimento</h2>
+                <div class="card">
+                    <div class="form-group">
+                        <label for="monthly_income"><i class="fas fa-wallet"></i> Renda Mensal Bruta (R$):</label>
+                        <input type="number" id="monthly_income" class="form-control" step="0.01" min="0" placeholder="Ex: 5000.00" aria-label="Renda Mensal Bruta">
+                        <small class="form-text">Informe sua renda mensal bruta para calcular o comprometimento.</small>
+                    </div>
+                    <p class="text-center"><strong>Renda Mínima Sugerida para este Empréstimo:</strong> R$ <span id="min_income_suggestion">0.00</span></p>
+                    <div id="incomeCommitmentChartContainer" class="chart-container">
+                        <canvas id="incomeCommitmentChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            {# Nova seção: Financeiras com Mais Chance de Aprovação #}
+            <section class="high-chance-companies">
+                <h2 class="section-title">Financeiras com Mais Chance de Aprovação <i class="fas fa-star text-warning"></i></h2>
+                <div class="card">
+                    <ul class="company-list">
+                        {# Dados mockados para demonstração. Em uma aplicação real, viriam do backend. #}
+                        <li class="company-item">
+                            <span class="icon"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></span>
+                            <div class="details">
+                                <strong>Banco Alpha</strong>
+                                <span>Chance de Aprovação: Alta</span>
+                            </div>
+                        </li>
+                        <li class="company-item">
+                            <span class="icon"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i></span>
+                            <div class="details">
+                                <strong>CrediBeta</strong>
+                                <span>Chance de Aprovação: Boa</span>
+                            </div>
+                        </li>
+                        <li class="company-item">
+                            <span class="icon"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i></span>
+                            <div class="details">
+                                <strong>FinanGamma</strong>
+                                <span>Chance de Aprovação: Média</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <h2 class="section-title">Tabela de Amortização</h2>
+            <div class="table-scroll" tabindex="0" role="region" aria-labelledby="amortization-table-title">
+                <table class="amortization-table">
+                    <caption id="amortization-table-title" class="sr-only">Tabela de Amortização do Empréstimo</caption>
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Pagamento Total (R$)</th>
+                            <th>Juros (R$)</th>
+                            <th>Amortização (R$)</th>
+                            <th>Saldo Restante (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="amortization-table-body">
+                        {# As linhas da tabela serão renderizadas via JavaScript para paginação #}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Controles de Paginação #}
+            <div class="pagination-controls">
+                <button type="button" id="prevPageBtn" aria-label="Página Anterior"><i class="fas fa-chevron-left"></i> Anterior</button>
+                <span id="pageInfo">Página 1 de 1</span>
+                <button type="button" id="nextPageBtn" aria-label="Próxima Página">Próxima <i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <div class="recalculate-button-container">
+                <button type="button" id="generatePdfBtn" class="btn btn-info btn-lg"><i class="fas fa-file-pdf"></i> Gerar Relatório PDF</button>
+                <button type="button" id="recalculateBtn" class="btn btn-secondary btn-lg"><i class="fas fa-redo"></i> Recalcular</button>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+
+{% block body_extra %}
+    {% if schedule %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scheduleData = {{ schedule | tojson }};
+            const summaryData = {{ summary | tojson }};
+
+            const months = scheduleData.map(item => `Mês ${item.month}`);
+            const balances = scheduleData.map(item => item.balance);
+            const interests = scheduleData.map(item => item.interest);
+            const principals = scheduleData.map(item => item.principal);
+
+            // Helper function to format currency
+            const formatCurrency = (value) => {
+                return `R$ ${parseFloat(value).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+            };
+
+            // --- Gráficos Existentes ---
+            // Gráfico 1: Saldo Devedor (Line Chart)
+            const debtCtx = document.getElementById('debtChart').getContext('2d');
+            new Chart(debtCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Saldo Devedor (R$)',
+                        data: balances,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#007bff',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: 'Evolução do Saldo Devedor ao Longo do Tempo' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Mês' } },
+                        y: {
+                            title: { display: true, text: 'Saldo (R$)' },
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico 2: Juros Pagos por Mês (Line Chart)
+            const interestCtx = document.getElementById('interestChart').getContext('2d');
+            new Chart(interestCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Juros Pagos (R$)',
+                        data: interests,
+                        borderColor: '#dc3545', /* Cor vermelha */
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#dc3545',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: 'Juros Pagos por Mês' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Mês' } },
+                        y: {
+                            title: { display: true, text: 'Juros (R$)' },
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico 3: Composição do Pagamento Mensal (Stacked Bar Chart)
+            const compositionCtx = document.getElementById('compositionChart').getContext('2d');
+            new Chart(compositionCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Principal Amortizado (R$)',
+                            data: principals,
+                            backgroundColor: '#28a745', /* Cor verde */
+                            borderColor: '#28a745',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Juros Pagos (R$)',
+                            data: interests,
+                            backgroundColor: '#ffc107', /* Cor amarela */
+                            borderColor: '#ffc107',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: 'Composição do Pagamento Mensal (Principal vs. Juros)' },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, title: { display: true, text: 'Mês' } },
+                        y: {
+                            stacked: true,
+                            title: { display: true, text: 'Valor (R$)' },
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico 4: Proporção Total Juros vs. Principal (Doughnut Chart)
+            const totalProportionCtx = document.getElementById('totalProportionChart').getContext('2d');
+            new Chart(totalProportionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Total Amortizado (Principal)', 'Total Juros Pagos'],
+                    datasets: [{
+                        data: [
+                            parseFloat(summaryData.total_principal),
+                            parseFloat(summaryData.total_interest)
+                        ],
+                        backgroundColor: ['#17a2b8', '#fd7e14'], /* Azul turquesa e laranja */
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: 'Proporção Total: Principal vs. Juros' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = parseFloat(context.parsed);
+                                    const total = parseFloat(summaryData.total_principal) + parseFloat(summaryData.total_interest);
+                                    const percentage = (value / total * 100).toFixed(2);
+                                    return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // --- Lógica para alternar a visibilidade dos gráficos ---
+            const chartNavButtons = document.querySelector('.chart-nav-buttons');
+            const chartContainers = document.querySelectorAll('.chart-container');
+
+            chartNavButtons.addEventListener('click', function(event) {
+                const targetButton = event.target.closest('.btn');
+                if (targetButton && targetButton.dataset.chart) {
+                    // Remove 'active' de todos os botões e aria-selected
+                    chartNavButtons.querySelectorAll('.btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.setAttribute('aria-selected', 'false');
+                    });
+                    // Adiciona 'active' ao botão clicado e aria-selected
+                    targetButton.classList.add('active');
+                    targetButton.setAttribute('aria-selected', 'true');
+
+                    // Esconde todos os contêineres de gráfico
+                    chartContainers.forEach(container => container.classList.add('hidden'));
+
+                    // Mostra o contêiner do gráfico selecionado
+                    const targetChartId = targetButton.dataset.chart + 'Container';
+                    document.getElementById(targetChartId).classList.remove('hidden');
+                }
+            });
+
+            // --- Paginação da Tabela de Amortização ---
+            const amortizationTableBody = document.getElementById('amortization-table-body');
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+            const pageInfoSpan = document.getElementById('pageInfo');
+
+            const itemsPerPage = 20;
+            let currentPage = 1;
+
+            function renderTablePage() {
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedSchedule = scheduleData.slice(startIndex, endIndex);
+
+                amortizationTableBody.innerHTML = ''; // Limpa a tabela
+
+                paginatedSchedule.forEach(payment => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Mês">${payment.month}</td>
+                        <td data-label="Pagamento Total (R$)">${formatCurrency(payment.payment)}</td>
+                        <td data-label="Juros (R$)">${formatCurrency(payment.interest)}</td>
+                        <td data-label="Amortização (R$)">${formatCurrency(payment.principal)}</td>
+                        <td data-label="Saldo Restante (R$)">${formatCurrency(payment.balance)}</td>
+                    `;
+                    amortizationTableBody.appendChild(row);
+                });
+
+                const totalPages = Math.ceil(scheduleData.length / itemsPerPage);
+                pageInfoSpan.textContent = `Página ${currentPage} de ${totalPages}`;
+
+                prevPageBtn.disabled = currentPage === 1;
+                nextPageBtn.disabled = currentPage === totalPages;
+            }
+
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTablePage();
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(scheduleData.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTablePage();
+                }
+            });
+
+            // Renderiza a primeira página ao carregar
+            renderTablePage();
+
+            // --- Gráfico de Comprometimento de Renda ---
+            const monthlyIncomeInput = document.getElementById('monthly_income');
+            const minIncomeSuggestionSpan = document.getElementById('min_income_suggestion');
+            const incomeCommitmentCtx = document.getElementById('incomeCommitmentChart').getContext('2d');
+            let incomeCommitmentChart; // Variável para armazenar a instância do gráfico
+
+            function updateIncomeCommitmentChart() {
+                const monthlyIncome = parseFloat(monthlyIncomeInput.value) || 0;
+                const firstInstallment = scheduleData.length > 0 ? scheduleData[0].payment : 0;
+
+                // Sugestão de renda mínima (ex: parcela não deve exceder 30% da renda)
+                const minSuggestedIncome = (firstInstallment / 0.30); // 30% de comprometimento
+                minIncomeSuggestionSpan.textContent = formatCurrency(minSuggestedIncome);
+
+                let committedPercentage = 0;
+                let remainingPercentage = 100;
+
+                if (monthlyIncome > 0) {
+                    committedPercentage = (firstInstallment / monthlyIncome) * 100;
+                    if (committedPercentage > 100) committedPercentage = 100; // Não pode exceder 100%
+                    remainingPercentage = 100 - committedPercentage;
+                }
+
+                const chartData = {
+                    labels: ['Comprometido com o Empréstimo', 'Renda Disponível'],
+                    datasets: [{
+                        data: [committedPercentage.toFixed(2), remainingPercentage.toFixed(2)],
+                        backgroundColor: ['#dc3545', '#28a745'], // Vermelho para comprometido, Verde para disponível
+                        hoverOffset: 4
+                    }]
+                };
+
+                if (incomeCommitmentChart) {
+                    incomeCommitmentChart.data = chartData;
+                    incomeCommitmentChart.update();
+                } else {
+                    incomeCommitmentChart = new Chart(incomeCommitmentCtx, {
+                        type: 'doughnut',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'top' },
+                                title: { display: true, text: 'Comprometimento da Renda Mensal' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = parseFloat(context.parsed);
+                                            return `${context.label}: ${value.toFixed(2)}%`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            monthlyIncomeInput.addEventListener('input', updateIncomeCommitmentChart);
+
+            // Inicializa o gráfico de comprometimento de renda
+            updateIncomeCommitmentChart();
+
+            // --- Lógica para o botão "Gerar Relatório PDF" ---
+            const generatePdfBtn = document.getElementById('generatePdfBtn');
+            if (generatePdfBtn) {
+                generatePdfBtn.addEventListener('click', function() {
+                    // Implementação futura para gerar PDF.
+                    // Isso geralmente envolve uma biblioteca JS como jsPDF ou uma chamada ao backend.
+                    alert('Funcionalidade de Gerar Relatório PDF em desenvolvimento!');
+                });
+            }
+
+            // --- Lógica para o botão "Recalcular" ---
+            const recalculateBtn = document.getElementById('recalculateBtn');
+            if (recalculateBtn) {
+                recalculateBtn.addEventListener('click', function() {
+                    // Simplesmente recarrega a página para resetar o formulário e os resultados
+                    window.location.href = window.location.pathname;
+                });
+            }
+        });
+    </script>
+    {% endif %}
+{% endblock %}

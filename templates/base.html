@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FinanciaAI - Simulador de empréstimos online para calcular, comparar e planejar suas opções financeiras com precisão.">
+    <meta name="keywords" content="simulador de empréstimos, FinanciaAI, finanças pessoais, taxas de juros, planejamento financeiro">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="FinanciaAI">
+    <meta property="og:title" content="FinanciaAI - Simulador de Empréstimos">
+    <meta property="og:description" content="Calcule e compare empréstimos com a FinanciaAI. Visualize amortizações e planeje seu futuro financeiro.">
+    <meta property="og:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+    <meta property="og:url" content="{{ url_for('index', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FinanciaAI - Simulador de Empréstimos">
+    <meta name="twitter:description" content="Calcule e compare empréstimos com a FinanciaAI. Visualize amortizações e planeje seu futuro financeiro.">
+    <meta name="twitter:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>{% block title %}FinanciaAI - Simulador de Empréstimos{% endblock %}</title>
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+
+    <header class="main-header"> {# Adicionada classe main-header para estilização geral do cabeçalho #}
+        <div class="container">
+            <div class="navbar-container">
+                <a href="{{ url_for('index') }}" class="navbar-brand" aria-label="Página inicial da FinanciaAI">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da FinanciaAI" class="logo">
+                    <span class="site-title">FinanciaAI</span>
+                </a>
+                <button class="navbar-toggler" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="main-navbar-nav"> {# Adicionado aria-controls #}
+                    <span class="toggler-icon"></span>
+                    <span class="sr-only">Menu</span> {# Adicionado para acessibilidade #}
+                </button>
+                <nav id="main-navbar-nav" aria-label="Navegação principal" class="navbar-nav"> {# Adicionado ID para aria-controls #}
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" {% if request.endpoint == 'index' %}aria-current="page"{% endif %} title="Voltar à página inicial">Início</a></li>
+                        <li class="nav-item"><a href="{{ url_for('loan_simulation') }}" class="nav-link {% if request.endpoint == 'loan_simulation' %}active{% endif %}" {% if request.endpoint == 'loan_simulation' %}aria-current="page"{% endif %} title="Simular um empréstimo">Simular Empréstimo</a></li>
+                        <li class="nav-item"><a href="{{ url_for('add_company') }}" class="nav-link {% if request.endpoint == 'add_company' %}active{% endif %}" {% if request.endpoint == 'add_company' %}aria-current="page"{% endif %} title="Adicionar uma nova instituição financeira">Adicionar Financeira</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <section class="flash-messages" aria-live="polite"> {# Alterado role="alert" para aria-live="polite" para menos interrupção, mas ainda anunciar #}
+                        {% for category, message in messages %}
+                            <div class="alert-message alert-{{ category }}" role="alert">{{ message }}</div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+            {% endwith %}
+            {% block main_content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="main-footer" role="contentinfo"> {# Adicionada classe main-footer para estilização geral do rodapé #}
+        <div class="container">
+            <div class="footer-main-content">
+                <div class="footer-section footer-section-brand">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logotipo da FinanciaAI" class="footer-brand-logo">
+                    <p class="footer-brand-tagline">FinanciaAI - Planejando seu futuro financeiro.</p>
+                    <div class="social-icons">
+                        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Link para o Facebook da FinanciaAI"><img src="{{ url_for('static', filename='icon-facebook.png') }}" alt="Facebook"></a> {# Adicionado target="_blank" e rel="noopener noreferrer" #}
+                        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Link para o Twitter da FinanciaAI"><img src="{{ url_for('static', filename='icon-twitter.png') }}" alt="Twitter"></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Link para o LinkedIn da FinanciaAI"><img src="{{ url_for('static', filename='icon-linkedin.png') }}" alt="LinkedIn"></a>
+                    </div>
+                </div>
+                <div class="footer-section footer-navigation">
+                    <h3>Navegação</h3>
+                    <ul class="footer-nav-list">
+                        <li><a href="{{ url_for('index') }}" title="Voltar à página inicial">Início</a></li>
+                        <li><a href="{{ url_for('loan_simulation') }}" title="Simular um empréstimo">Simular Empréstimo</a></li>
+                        <li><a href="{{ url_for('add_company') }}" title="Adicionar uma nova instituição financeira">Adicionar Financeira</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section footer-legal">
+                    <h3>Legal</h3>
+                    <ul class="footer-nav-list">
+                        <li><a href="{{ url_for('terms') }}" title="Leia nossos termos de uso">Termos de Uso</a></li>
+                        <li><a href="{{ url_for('privacy') }}" title="Veja nossa política de privacidade">Política de Privacidade</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section footer-contact">
+                    <h3>Contato</h3>
+                    <p>Email: contato@financiaai.com</p>
+                    <p>Telefone: (XX) XXXX-XXXX</p>
+                    <p><a href="{{ url_for('contact') }}" title="Entre em contato conosco">Formulário de Contato</a></p>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <p>&copy; {{ current_year }} FinanciaAI. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    {% block scripts_extra %}{% endblock %} {# Bloco para scripts específicos de cada página #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.querySelector('.navbar-toggler');
+            const navList = document.querySelector('.navbar-nav'); // Seleciona o elemento <nav>
+            const navLinks = document.querySelectorAll('.nav-link'); // Seleciona todos os links de navegação
+
+            if (menuToggle && navList) {
+                menuToggle.addEventListener('click', function() {
+                    const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+                    menuToggle.setAttribute('aria-expanded', !isExpanded);
+                    navList.classList.toggle('active', !isExpanded); // Adiciona 'active' se o menu for expandido
+                });
+
+                // Fechar o menu ao clicar em um link
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        navList.classList.remove('active');
+                        menuToggle.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

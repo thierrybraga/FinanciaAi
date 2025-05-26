@@ -1,0 +1,21 @@
+```html
+{% extends 'base.html' %}
+
+{% block title %}Política de Privacidade - FinanciaAI{% endblock %}
+
+{% block main_content %}
+    <section class="privacy-section" aria-labelledby="privacy-title">
+        <h2 id="privacy-title">Política de Privacidade</h2>
+        <div class="content-box">
+            <p>A FinanciaAI valoriza sua privacidade e está comprometida em proteger seus dados pessoais.</p>
+            <h3>1. Coleta de Dados</h3>
+            <p>Coletamos apenas os dados necessários para fornecer nossos serviços, como informações fornecidas em formulários de simulação ou contato.</p>
+            <h3>2. Uso de Dados</h3>
+            <p>Seus dados são usados para processar simulações de empréstimos e responder a solicitações de contato.</p>
+            <h3>3. Segurança</h3>
+            <p>Implementamos medidas de segurança para proteger seus dados contra acesso não autorizado.</p>
+            <p>Para dúvidas, entre em contato via <a href="{{ url_for('contact') }}">nossa página de contato</a>.</p>
+        </div>
+    </section>
+{% endblock %}
+```

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}FinanciaAI - Simulador de Empréstimos e Planejamento Financeiro{% endblock %}
+
+{% block head_extra %}
+    <meta name="description" content="Simule empréstimos com o FinanciaAI. Compare taxas de juros de {{ companies | length }} instituições financeiras, visualize amortizações e planeje seu futuro financeiro.">
+    <meta name="keywords" content="simulador de empréstimos, FinanciaAI, taxas de juros, planejamento financeiro, finanças pessoais, comparação de empréstimos{% for company in companies %}, {{ company.name }}{% endfor %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% endblock %}
+
+{% block main_content %}
+    <section class="hero-section" aria-labelledby="hero-title">
+        <div class="container hero-content">
+            <h1 id="hero-title">Seu Futuro Financeiro Começa Aqui</h1>
+            <p class="tagline">Simule empréstimos, compare financeiras e planeje suas finanças de forma inteligente.</p>
+            <div class="hero-actions">
+                <a href="{{ url_for('loan_simulation') }}" class="btn btn-primary btn-xl" title="Iniciar simulação de empréstimo">Explorar Opções</a>
+                <a href="#features-title" class="btn btn-outline-primary btn-lg" title="Saiba mais sobre a FinanciaAI">Saiba Mais</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="companies-overview-section" aria-labelledby="companies-overview-title">
+        <div class="container">
+            <h2 id="companies-overview-title">Nossos Parceiros Financeiros</h2>
+            <p>Conheça as instituições financeiras com as quais trabalhamos para oferecer as melhores opções para você.</p>
+            <div class="company-list">
+                {% if companies %}
+                    {% for company in companies %}
+                        <article class="company-tag" aria-label="Financeira {{ company.name }}">
+                            {{ company.name }}
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-companies-message">Nenhuma financeira disponível no momento.</p>
+                {% endif %}
+            </div>
+            <div class="add-company-action" style="text-align: center; margin-top: var(--spacing-xl);">
+                <a href="{{ url_for('add_company') }}" class="btn btn-secondary btn-lg" title="Adicionar uma nova financeira ao sistema">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus-circle" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Adicionar Financeira
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section" aria-labelledby="features-title">
+        <div class="container">
+            <h2 id="features-title">Por Que Escolher a FinanciaAI?</h2>
+            <div class="feature-cards">
+                <article class="feature-card">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" class="icon" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <h3>Segurança Garantida</h3>
+                    <p>Seus dados protegidos com a mais alta tecnologia de segurança.</p>
+                </article>
+                <article class="feature-card">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" class="icon" aria-hidden="true">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/>
+                    </svg>
+                    <h3>Simples e Intuitivo</h3>
+                    <p>Simule empréstimos de forma rápida e descomplicada, sem burocracia.</p>
+                </article>
+                <article class="feature-card" data-tip="Compare taxas de várias instituições">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" class="icon" aria-hidden="true">
+                        <path d="M3 21h18M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                    </svg>
+                    <h3>Comparação Inteligente</h3>
+                    <p>Escolha a melhor financeira com base em taxas e condições.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="call-to-action-section" aria-labelledby="cta-title">
+        <div class="container">
+            <h2 id="cta-title">Pronto para Começar?</h2>
+            <p>Simule agora e encontre o empréstimo ideal para seus objetivos.</p>
+            <div class="hero-actions">
+                <a href="{{ url_for('loan_simulation') }}" class="btn btn-primary btn-xl" title="Iniciar simulação de empréstimo">Explorar Opções</a>
+                <a href="{{ url_for('index') }}#features-title" class="btn btn-outline-primary btn-lg" title="Saiba mais sobre a FinanciaAI">Saiba Mais</a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts_extra %}
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% endblock %}

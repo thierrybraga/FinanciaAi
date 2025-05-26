@@ -1,0 +1,21 @@
+```html
+{% extends 'base.html' %}
+
+{% block title %}Termos de Uso - FinanciaAI{% endblock %}
+
+{% block main_content %}
+    <section class="terms-section" aria-labelledby="terms-title">
+        <h2 id="terms-title">Termos de Uso</h2>
+        <div class="content-box">
+            <p>Estes Termos de Uso regem o uso do simulador de empréstimos FinanciaAI. Ao acessar ou utilizar nosso serviço, você concorda com os termos aqui descritos.</p>
+            <h3>1. Uso do Serviço</h3>
+            <p>O FinanciaAI oferece uma ferramenta para simulação de empréstimos. As informações fornecidas são estimativas e não constituem oferta de crédito.</p>
+            <h3>2. Responsabilidades do Usuário</h3>
+            <p>Você é responsável por fornecer informações precisas e manter a confidencialidade de seus dados.</p>
+            <h3>3. Limitação de Responsabilidade</h3>
+            <p>A FinanciaAI não se responsabiliza por decisões financeiras tomadas com base nas simulações.</p>
+            <p>Para mais detalhes, entre em contato conosco via <a href="{{ url_for('contact') }}">nossa página de contato</a>.</p>
+        </div>
+    </section>
+{% endblock %}
+```
